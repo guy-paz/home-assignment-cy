@@ -68,7 +68,6 @@ class WordService:
         except Exception as e:
             logger.error(f'request - {request_id} an unexpected error occured {e}')
             raise e
-            # return self._get_empty_summary_and_log_warning(request_id, f"unexpected error for request {request_id}")
 
     async def _get_empty_summary_and_log_warning(self, request_id: str,log_error: str,timestamp: str):
         logger.warning(log_error)
