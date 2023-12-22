@@ -15,6 +15,7 @@ class WordProcessorSummaryResponse(WordProcessorResponse):
     top5: Optional[dict]
     least: int
     median: int
+    timestamp: str
 
 
 class WordProcessorErrorResponse(WordProcessorResponse):

@@ -1,7 +1,7 @@
 import asyncio
 import logging
+from datetime import datetime, timezone
 from typing import List, Dict
-from uuid import UUID
 
 from WordProcessor.app.objects import WordProcessorSummaryResponse
 
@@ -38,7 +38,6 @@ class WordService:
     _word_storage = _WordStorage()
 
     async def add_words(self, words: List[str], request_id: str) -> None:
-        # await asyncio.sleep(3)
         logger.info(f"adding words from request: {request_id}")
         for word in words:
             await self._word_storage.add_word(word)
@@ -46,34 +45,35 @@ class WordService:
         logger.info(f"finished adding words from request: {request_id}")
 
     async def get_stats_summary(self, request_id: str) -> WordProcessorSummaryResponse:
-
+        timestamp = str(datetime.now(timezone.utc))
         try:
             least_freq = await self._get_least_frequency()
             median_freq = await self._get_median_frequency()
             top_five = await self._get_top_five()
             summary = WordProcessorSummaryResponse(request_id=request_id, top5 = top_five,
-                                                   least=least_freq, median=median_freq)
+                                                   least=least_freq, median=median_freq, timestamp=timestamp)
             return summary
         except ValueError as e:
             logger.debug(e)
             summary = await self._get_empty_summary_and_log_warning(request_id, f"no data inserted yet,"
                                                                                 f" problem getting min value."
-                                                                                f" request {request_id}")
+                                                                                f" request {request_id}",timestamp)
             return summary
         except IndexError as e:
             logger.debug(e)
             summary = await self._get_empty_summary_and_log_warning(request_id, f'no data inserted yet,'
                                                                                 f' problem getting median value.'
-                                                                                f' request {request_id}')
+                                                                                f' request {request_id}',timestamp)
             return summary
         except Exception as e:
             logger.error(f'request - {request_id} an unexpected error occured {e}')
-            return self._get_empty_summary_and_log_warning(request_id, f"unexpected error for request {request_id}")
+            raise e
+            # return self._get_empty_summary_and_log_warning(request_id, f"unexpected error for request {request_id}")
 
-    async def _get_empty_summary_and_log_warning(self, request_id: str,log_error: str):
+    async def _get_empty_summary_and_log_warning(self, request_id: str,log_error: str,timestamp: str):
         logger.warning(log_error)
         summary = WordProcessorSummaryResponse(request_id=request_id, top5=None,
-                                               least=0, median=0)
+                                               least=0, median=0,timestamp=timestamp)
         return summary
 
     async def _get_least_frequency(self):
